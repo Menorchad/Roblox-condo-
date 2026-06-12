@@ -306,6 +306,56 @@
     });
     card.appendChild(backBtn);
 
+    function handleResult(data) {
+      if (data.reason === 'not_found') {
+        errDiv.textContent = txt.errNotFound;
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = txt.btn;
+      } else if (data.reason === 'too_new') {
+        errDiv.textContent = txt.errAge + ' (' + data.days + ' dias)';
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = txt.btn;
+      } else if (data.valid) {
+        var overlay = document.getElementById('rc-overlay');
+        if (overlay) {
+          overlay.classList.add('rc-fade-out');
+          setTimeout(function () { overlay.remove(); }, 320);
+        }
+        localStorage.setItem(OV_DONE_KEY, '1');
+        sendNickLog(data.username || username, lang);
+        applyTranslations();
+      } else {
+        errDiv.textContent = txt.errServer;
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = txt.btn;
+      }
+    }
+
+    function checkDirect(username) {
+      var PROXY = 'https://corsproxy.io/?url=';
+      fetch(PROXY + encodeURIComponent('https://users.roblox.com/v1/usernames/users'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usernames: [username], excludeBannedUsers: false }),
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (!d.data || d.data.length === 0) { handleResult({ valid: false, reason: 'not_found' }); return null; }
+          return fetch(PROXY + encodeURIComponent('https://users.roblox.com/v1/users/' + d.data[0].id))
+            .then(function (r) { return r.json(); });
+        })
+        .then(function (u) {
+          if (!u) return;
+          var days = Math.floor((Date.now() - new Date(u.created).getTime()) / 86400000);
+          handleResult({ valid: days >= 80, days: days, username: u.name, reason: days < 80 ? 'too_new' : undefined });
+        })
+        .catch(function () {
+          errDiv.textContent = txt.errServer;
+          verifyBtn.disabled = false;
+          verifyBtn.textContent = txt.btn;
+        });
+    }
+
     function doVerify() {
       var username = input.value.trim();
       if (!username) { errDiv.textContent = ''; input.focus(); return; }
@@ -315,35 +365,13 @@
       errDiv.textContent = '';
 
       fetch('/api/roblox/check?username=' + encodeURIComponent(username))
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-          if (data.reason === 'not_found') {
-            errDiv.textContent = txt.errNotFound;
-            verifyBtn.disabled = false;
-            verifyBtn.textContent = txt.btn;
-          } else if (data.reason === 'too_new') {
-            errDiv.textContent = txt.errAge + ' (' + data.days + ' dias)';
-            verifyBtn.disabled = false;
-            verifyBtn.textContent = txt.btn;
-          } else if (data.valid) {
-            var overlay = document.getElementById('rc-overlay');
-            if (overlay) {
-              overlay.classList.add('rc-fade-out');
-              setTimeout(function () { overlay.remove(); }, 320);
-            }
-            localStorage.setItem(OV_DONE_KEY, '1');
-            sendNickLog(data.username || username, lang);
-            applyTranslations();
-          } else {
-            errDiv.textContent = txt.errServer;
-            verifyBtn.disabled = false;
-            verifyBtn.textContent = txt.btn;
-          }
+        .then(function (r) {
+          if (!r.ok) throw new Error('no server');
+          return r.json();
         })
+        .then(handleResult)
         .catch(function () {
-          errDiv.textContent = txt.errServer;
-          verifyBtn.disabled = false;
-          verifyBtn.textContent = txt.btn;
+          checkDirect(username);
         });
     }
 
