@@ -70,6 +70,15 @@
 
   /* ── Site-wide text translations ────────────────────────── */
   var SITE = {
+    'pt': {
+      'WELCOME TO THE CONDO': 'BEM-VINDO AO CONDO',
+      'The ultimate destination for exclusive Roblox games. Pick your game, jump in, and dominate.': 'O destino definitivo para jogos exclusivos do Roblox. Escolha seu jogo, entre e domine.',
+      'Featured Games': 'Jogos em Destaque', 'games available': 'jogos disponíveis',
+      'PLAY NOW': 'JOGAR AGORA', 'Play Now': 'Jogar Agora',
+      'Entry Requirements': 'Requisitos de Entrada', 'Access Game': 'Acessar Jogo',
+      'Generate Token': 'Gerar Token', 'Copy token': 'Copiar token',
+      'Accounts under 80 days old': 'Contas com menos de 80 dias',
+    },
     'zh': {
       'WELCOME TO THE CONDO': '欢迎来到 CONDO',
       'The ultimate destination for exclusive Roblox games. Pick your game, jump in, and dominate.': 'Roblox 独家游戏的终极目的地。选择你的游戏，加入并称霸。',
@@ -107,7 +116,7 @@
   var audio = null;
   function playClick() {
     try {
-      if (!audio) { audio = new Audio('/click-sound.mp3'); audio.volume = 0.5; }
+      if (!audio) { audio = new Audio('click-sound.mp3'); audio.volume = 0.5; }
       audio.currentTime = 0;
       audio.play().catch(function () {});
     } catch (e) {}
@@ -485,7 +494,7 @@
     label.textContent = '▶ Promo';
 
     var video = document.createElement('video');
-    video.src = '/promo-video.mp4';
+    video.src = 'promo-video.mp4';
     video.autoplay = true; video.loop = true;
     video.muted = true; video.playsInline = true; video.controls = true;
     video.style.cssText = 'width:100%;display:block;max-height:340px;object-fit:cover;';
